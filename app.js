@@ -2,9 +2,8 @@ const express = require('express');
 const request = require('request');
 const bodyParser = require('body-parser');
 
-const port = 5000;
-const frontEndURI = 'http://localhost:4200';
-const blockchainURI = 'http://localhost:3000/api';
+const frontEndURI = `${process.env.FRONT_END_DOMAIN}:${process.env.FRONT_END_PORT}`;
+const blockchainURI = `http://localhost:${process.env.BLOCKCHAIN_PORT}/api`;
 
 app = express();
 app.use(bodyParser.json());
@@ -30,4 +29,4 @@ app.post('/agent', (req, res) => {
     })
 });
 
-app.listen(port, () => console.log(`Server now running listening to port ${port}`));
+app.listen(process.env.SERVER_PORT, () => console.log(`Server now running listening to port ${process.env.SERVER_PORT}`));
