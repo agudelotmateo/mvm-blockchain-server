@@ -32,4 +32,7 @@ app.use(function (req, res, next) {
 app.get('/agent', wrapGet(`${blockchainURI}/AgenteMEM`));
 app.post('/agent', wrapPost(`${blockchainURI}/AgenteMEM`));
 
+app.get('/regulator', wrapGet(`${blockchainURI}/EntidadReguladora`));
+app.post('/regulator', wrapPost(`${blockchainURI}/EntidadReguladora`));
+
 app.listen(process.env.SERVER_PORT, () => console.log(`Server now running listening to port ${process.env.SERVER_PORT}`));
