@@ -5,6 +5,21 @@ const bodyParser = require('body-parser');
 const frontEndURI = `${process.env.FRONT_END_DOMAIN}:${process.env.FRONT_END_PORT}`;
 const blockchainURI = `http://localhost:${process.env.BLOCKCHAIN_PORT}/api`;
 
+wrapGet = originalURI => (req, res) => {
+    request(originalURI, (err, response, body) => {
+        res.json(JSON.parse(response.body));
+    });
+}
+
+wrapPost = originalURI => (req, res) => {
+    request.post({
+        url: originalURI,
+        form: req.body
+    }, (err, response, body) => {
+        res.json(JSON.parse(response.body));
+    })
+}
+
 app = express();
 app.use(bodyParser.json());
 
@@ -14,19 +29,7 @@ app.use(function (req, res, next) {
     next();
 });
 
-app.get('/agent', (req, res) => {
-    request(`${blockchainURI}/AgenteMEM`, (err, response, body) => {
-        res.json(JSON.parse(response.body));
-    })
-});
-
-app.post('/agent', (req, res) => {
-    request.post({
-        url: `${blockchainURI}/AgenteMEM`,
-        form: req.body
-    }, (err, response, body) => {
-        res.json(JSON.parse(response.body));
-    })
-});
+app.get('/agent', wrapGet(`${blockchainURI}/AgenteMEM`));
+app.post('/agent', wrapPost(`${blockchainURI}/AgenteMEM`));
 
 app.listen(process.env.SERVER_PORT, () => console.log(`Server now running listening to port ${process.env.SERVER_PORT}`));
