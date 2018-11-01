@@ -13,7 +13,8 @@ const UserSchema = mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['admin', 'agent', 'regulator']
+        enum: ['admin', 'agent', 'regulator'],
+        required: true
     }
 }, { collection: 'users' });
 

@@ -3,17 +3,30 @@ const request = require('request');
 const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const passport = require('passport');
+const jwt = require('jsonwebtoken');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
+const User = require('./models/user');
 
 const frontEndURI = `${process.env.FRONT_END_DOMAIN}:${process.env.FRONT_END_PORT}`;
 const blockchainURI = `http://localhost:${process.env.BLOCKCHAIN_PORT}/api`;
 const mongoURI = `mongodb://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}`;
 
-mongoose.connect(mongoURI);
+mongoose.connect(mongoURI, { useNewUrlParser: true });
 mongoose.connection.on('connected', () => console.log(`Successfully connected to the DB at ${mongoURI}`));
 mongoose.connection.on('error', err => console.log(`Database connection error: ${err}`));
+mongoose.set('useCreateIndex', true);
 
+app = express();
+
+app.use(bodyParser.json());
+app.use(function (req, res, next) {
+    res.header('Access-Control-Allow-Origin', frontEndURI);
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    next();
+});
+app.use(passport.initialize());
+app.use(passport.session());
 passport.use(new JwtStrategy(
     {
         jwtFromRequest: ExtractJwt.fromAuthHeaderWithScheme('JWT'),
@@ -31,37 +44,94 @@ passport.use(new JwtStrategy(
     })
 );
 
-wrapGet = originalURI => (req, res) => {
-    request(originalURI, (err, response, body) => {
-        res.json(JSON.parse(response.body));
+app.post('/authenticate', (req, res) => {
+    console.log(req.body);
+    const username = req.body.username;
+    const password = req.body.password;
+    User.findOne({ username }, (err, user) => {
+        if (err)
+            throw err;
+        if (!user)
+            return res.status(400).json({ success: false, msg: 'User not found' });
+        User.comparePasswords(password, user.password, (err, match) => {
+            if (err)
+                throw err;
+            if (match) {
+                res.status(200).json({
+                    success: true,
+                    token: `JWT ${jwt.sign(user.toObject(), process.env.JWT_SECRET, { expiresIn: 604800 })}`,
+                    user: {
+                        id: user._id,
+                        username: user.username,
+                        password: user.password,
+                        type: user.type
+                    }
+                });
+            } else
+                res.status(400).json({ success: false, msg: 'Wrong password' });
+        });
+    });
+});
+
+checkPermissions = (req, res, validUserTypes, next) => {
+    if (validUserTypes.includes(req.user.type))
+        next();
+    else
+        res.status(401).json({ success: false, msg: 'Unauthorized' });
+}
+
+app.post('/register', passport.authenticate('jwt', { session: false }), (req, res) => {
+    checkPermissions(req, res, ['admin'], () => {
+        User.findOne({ username: req.body.username }, (err, user) => {
+            if (err)
+                throw err;
+            if (user)
+                return res.status(400).json({ success: false, msg: 'Username already in use' });
+            User.addUser(
+                new User({
+                    username: req.body.username,
+                    password: req.body.password,
+                    type: req.body.type
+                }),
+                (err, user) => {
+                    if (err)
+                        res.status(400).json({ success: false, msg: 'Failed to register user' });
+                    else
+                        res.status(200).json({ success: true, msg: 'User successfully registered' });
+                });
+        });
+    });
+});
+
+wrapEndpoint = settings => (req, res) => {
+    checkPermissions(req, res, settings.validUserTypes, () => {
+        if (settings.method === 'post')
+            request.post({
+                url: settings.originalURI,
+                form: req.body
+            }, (err, response, body) => {
+                res.json(JSON.parse(response.body));
+            })
+        else
+            request(settings.originalURI, (err, response, body) => {
+                res.json(JSON.parse(response.body));
+            });
     });
 }
 
-wrapPost = originalURI => (req, res) => {
-    request.post({
-        url: originalURI,
-        form: req.body
-    }, (err, response, body) => {
-        res.json(JSON.parse(response.body));
-    })
-}
+app.get('/agent', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['admin'], originalURI: `${blockchainURI}/AgenteMEM` }));
+app.post('/agent', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['admin'], originalURI: `${blockchainURI}/AgenteMEM`, method: 'post' }));
 
-app = express();
+app.get('/regulator', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['admin'], originalURI: `${blockchainURI}/EntidadReguladora` }));
+app.post('/regulator', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['admin'], originalURI: `${blockchainURI}/EntidadReguladora`, method: 'post' }));
 
-app.use(bodyParser.json());
-app.use(function (req, res, next) {
-    res.header('Access-Control-Allow-Origin', frontEndURI);
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-});
-
-app.get('/agent', wrapGet(`${blockchainURI}/AgenteMEM`));
-app.post('/agent', wrapPost(`${blockchainURI}/AgenteMEM`));
-
-app.get('/regulator', wrapGet(`${blockchainURI}/EntidadReguladora`));
-app.post('/regulator', wrapPost(`${blockchainURI}/EntidadReguladora`));
-
-app.get('/condensador', wrapGet(`${blockchainURI}/PublicarDeclaracionCondensador`));
-app.post('/condensador', wrapPost(`${blockchainURI}/PublicarDeclaracionCondensador`));
+app.get('/condensador', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador` }));
+app.post('/condensador', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['agent'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador`, method: 'post' }));
 
 app.listen(process.env.SERVER_PORT, () => console.log(`Server now running listening to port ${process.env.SERVER_PORT}`));
