@@ -7,6 +7,7 @@ const jwt = require('jsonwebtoken');
 const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const User = require('./models/user');
+const cors = require('cors');
 
 const frontEndURI = `${process.env.FRONT_END_DOMAIN}:${process.env.FRONT_END_PORT}`;
 const blockchainURI = `http://localhost:${process.env.BLOCKCHAIN_PORT}/api`;
@@ -19,12 +20,8 @@ mongoose.set('useCreateIndex', true);
 
 app = express();
 
+app.use(cors({ origin: frontEndURI }));
 app.use(bodyParser.json());
-app.use(function (req, res, next) {
-    res.header('Access-Control-Allow-Origin', frontEndURI);
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
-    next();
-});
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new JwtStrategy(
@@ -45,7 +42,6 @@ passport.use(new JwtStrategy(
 );
 
 app.post('/authenticate', (req, res) => {
-    console.log(req.body);
     const username = req.body.username;
     const password = req.body.password;
     User.findOne({ username }, (err, user) => {
