@@ -63,7 +63,6 @@ app.post('/authenticate', (req, res) => {
                     user: {
                         id: user._id,
                         username: user.username,
-                        password: user.password,
                         type: user.type
                     }
                 });
