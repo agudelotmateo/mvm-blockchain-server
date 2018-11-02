@@ -8,6 +8,7 @@ const JwtStrategy = require('passport-jwt').Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const User = require('./models/user');
 const cors = require('cors');
+const util = require('util')
 
 const frontEndURI = `${process.env.FRONT_END_DOMAIN}:${process.env.FRONT_END_PORT}`;
 const blockchainURI = `http://localhost:${process.env.BLOCKCHAIN_PORT}/api`;
@@ -124,9 +125,9 @@ app.get('/regulator', passport.authenticate('jwt', { session: false }),
 app.post('/regulator', passport.authenticate('jwt', { session: false }),
     wrapEndpoint({ validUserTypes: ['admin'], originalURI: `${blockchainURI}/EntidadReguladora`, method: 'post' }));
 
-app.get('/condensador', passport.authenticate('jwt', { session: false }),
+app.get('/condenser', passport.authenticate('jwt', { session: false }),
     wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador` }));
-app.post('/condensador', passport.authenticate('jwt', { session: false }),
+app.post('/condenser', passport.authenticate('jwt', { session: false }),
     wrapEndpoint({ validUserTypes: ['agent'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador`, method: 'post' }));
 
 app.listen(process.env.SERVER_PORT, () => console.log(`Server now running listening to port ${process.env.SERVER_PORT}`));
