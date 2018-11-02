@@ -92,7 +92,7 @@ app.post('/register', passport.authenticate('jwt', { session: false }), (req, re
                     if (err)
                         res.status(400).json({ success: false, msg: 'Failed to register user' });
                     else
-                        res.status(200).json({ success: true, msg: 'User successfully registered' });
+                        res.status(200).json({ success: true, msg: 'User successfully registered', id: user._id });
                 });
         });
     });
