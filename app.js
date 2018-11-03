@@ -13,6 +13,7 @@ const util = require('util')
 const frontEndURI = `${process.env.FRONT_END_DOMAIN}:${process.env.FRONT_END_PORT}`;
 const blockchainURI = `http://localhost:${process.env.BLOCKCHAIN_PORT}/api`;
 const mongoURI = `mongodb://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}`;
+const agenteSeleccionado = 123;
 
 mongoose.connect(mongoURI, { useNewUrlParser: true });
 mongoose.connection.on('connected', () => console.log(`Successfully connected to the DB at ${mongoURI}`));
@@ -128,6 +129,49 @@ app.post('/regulator', passport.authenticate('jwt', { session: false }),
 app.get('/condenser', passport.authenticate('jwt', { session: false }),
     wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador` }));
 app.post('/condenser', passport.authenticate('jwt', { session: false }),
-    wrapEndpoint({ validUserTypes: ['agent'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador`, method: 'post' }));
+	 wrapEndpoint({ validUserTypes: ['agent'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador`, method: 'post' }));
 
+//----BEGIN PRIMERA QUERY----
+
+app.get('/condensador', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador` }));
+
+app.get('/linea', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionLinea` }));
+
+app.get('/reactor', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionReactor` }));
+
+app.get('/svc', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionSvc` }));
+
+app.get('/transformador', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionTransformador` }));
+
+app.get('/unidadesGeneracion', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionUnidadesDeGeneracion` }));
+
+//----END PRIMERA QUERY----
+
+//----BEGIN SEGUNDA QUERY---
+
+app.get('/condensadorPorAgente', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador?filter=%7B%22where%22%20%3A%20%7B%22declaracionCondensador.agente%22%3A%22resource%3Aco.edu.eafit.mvmblockchain.AgenteMEM%23idAgenteMEM%3A${agenteSeleccionado}%22%7D%7D` }));
+
+app.get('/lineaPorAgente', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionLinea?filter=%7B%22where%22%20%3A%20%7B%22declaracionLinea.agente%22%3A%20%22resource%3Aco.edu.eafit.mvmblockchain.AgenteMEM%23idAgenteMEM%3A${agenteSeleccionado}%22%7D%7D` }));
+
+app.get('/reactorPorAgente', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionReactor?filter=%7B%22where%22%20%3A%20%7B%22declaracionReactor.agente%22%3A%20%22resource%3Aco.edu.eafit.mvmblockchain.AgenteMEM%23idAgenteMEM%3A${agenteSeleccionado}%22%7D%7D` }));
+
+app.get('/svcPorAgente', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionSvc?filter=%7B%22where%22%20%3A%20%7B%22declaracionSvc.agente%22%3A%20%22resource%3Aco.edu.eafit.mvmblockchain.AgenteMEM%23idAgenteMEM%3A${agenteSeleccionado}%22%7D%7D` }));
+
+app.get('/transformadorPorAgente', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionTransformador?filter=%7B%22where%22%20%3A%20%7B%22declaracionTransformador.agente%22%3A%20%22resource%3Aco.edu.eafit.mvmblockchain.AgenteMEM%23idAgenteMEM%3A${agenteSeleccionado}%22%7D%7D` }));
+
+app.get('/unidadesGeneracionPorAgente', passport.authenticate('jwt', { session: false }),
+	wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionUnidadesDeGeneracion?filter=%7B%22where%22%20%3A%20%7B%22declaracionUnidadesDeGeneracion.agente%22%3A%20%22resource%3Aco.edu.eafit.mvmblockchain.AgenteMEM%23idAgenteMEM%3A${agenteSeleccionado}%22%7D%7D` }));
+
+//----END SEGUNDA QUERY----
 app.listen(process.env.SERVER_PORT, () => console.log(`Server now running listening to port ${process.env.SERVER_PORT}`));
