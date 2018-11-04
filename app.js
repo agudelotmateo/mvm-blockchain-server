@@ -19,7 +19,6 @@ mongoose.connect(mongoURI, { useNewUrlParser: true });
 mongoose.connection.on('connected', () => console.log(`Successfully connected to the DB at ${mongoURI}`));
 mongoose.connection.on('error', err => console.log(`Database connection error: ${err}`));
 mongoose.set('useCreateIndex', true);
-
 app = express();
 
 app.use(cors({ origin: frontEndURI }));
@@ -130,6 +129,32 @@ app.get('/condenser', passport.authenticate('jwt', { session: false }),
     wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador` }));
 app.post('/condenser', passport.authenticate('jwt', { session: false }),
 	 wrapEndpoint({ validUserTypes: ['agent'], originalURI: `${blockchainURI}/PublicarDeclaracionCondensador`, method: 'post' }));
+
+app.get('/linea', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionLinea` }));
+app.post('/linea', passport.authenticate('jwt', { session: false }),
+	 wrapEndpoint({ validUserTypes: ['agent'], originalURI: `${blockchainURI}/PublicarDeclaracionLinea`, method: 'post' }));
+
+app.get('/reactor', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionReactor` }));
+app.post('/reactor', passport.authenticate('jwt', { session: false }),
+	 wrapEndpoint({ validUserTypes: ['agent'], originalURI: `${blockchainURI}/PublicarDeclaracionReactor`, method: 'post' }));
+
+app.get('/svc', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionSvc` }));
+app.post('/svc', passport.authenticate('jwt', { session: false }),
+	 wrapEndpoint({ validUserTypes: ['agent'], originalURI: `${blockchainURI}/PublicarDeclaracionSvc`, method: 'post' }));
+
+app.get('/transformador', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionTransformador` }));
+app.post('/transformador', passport.authenticate('jwt', { session: false }),
+	 wrapEndpoint({ validUserTypes: ['agent'], originalURI: `${blockchainURI}/PublicarDeclaracionTransformador`, method: 'post' }));
+
+app.get('/unidadesGeneracion', passport.authenticate('jwt', { session: false }),
+    wrapEndpoint({ validUserTypes: ['agent', 'regulator'], originalURI: `${blockchainURI}/PublicarDeclaracionUnidadesDeGeneracion` }));
+app.post('/unidadesGeneracion', passport.authenticate('jwt', { session: false }),
+	 wrapEndpoint({ validUserTypes: ['agent'], originalURI: `${blockchainURI}/PublicarDeclaracionUnidadesDeGeneracion`, method: 'post' }));
+
 
 //----BEGIN PRIMERA QUERY----
 
